@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
+import html2canvas from 'html2canvas';
 
 // Types
 interface Question {
@@ -22,6 +23,17 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'first_blood', name: 'Rookie', description: 'Complete your first quiz session', icon: '🎓' },
   { id: 'level_5', name: 'Dedicated Scholar', description: 'Reach Level 5', icon: '📚' },
   { id: 'error_fixer', name: 'Clarity Seeker', description: 'Have 0 mistakes in your error list', icon: '✨' }
+];
+
+const ENCOURAGEMENT_JOKES = [
+  "Москва не сразу строилась, и политологами не сразу становятся.",
+  "Даже Аристотель когда-то не знал, что такое политика.",
+  "Не ошибается тот, кто не сдает тесты.",
+  "Политика - дело тонкое, в следующий раз получится!",
+  "Главное не победа, а участие... и работа над ошибками!",
+  "Провал - это просто еще одна ступенька к успеху. Высокая, но ступенька.",
+  "Может, политика это не ваше? Шучу, просто попробуйте еще раз!",
+  "Знания приходят с опытом, а опыт - с количеством попыток."
 ];
 
 // Data Pool
@@ -3506,26 +3518,55 @@ const App = () => {
     const accuracy = Math.round((score / currentQuestions.length) * 100);
     const xpGained = (score * XP_PER_CORRECT) + Math.floor(bonusScore / 10);
 
+    const isPassed = score >= 15;
+
+    // Choose a random joke only once per render/round effectively
+    const randomJoke = useMemo(() => {
+      const idx = Math.floor(Math.random() * ENCOURAGEMENT_JOKES.length);
+      return ENCOURAGEMENT_JOKES[idx];
+    }, []);
+
     const handleShare = async () => {
-      const text = `🏆 ProQuiz Result\n\n🎯 Score: ${score}/${currentQuestions.length}\n⚡ Accuracy: ${accuracy}%\n⭐ Level: ${currentLevel}\n🏅 Achievements: ${unlockedAchievements.length}\n\nCan you beat my score? Play now: ${window.location.href}`;
+      const element = document.getElementById('result-card');
+      if (!element) return;
 
       try {
-        await navigator.clipboard.writeText(text);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        const canvas = await html2canvas(element, {
+          backgroundColor: null, // Transparent or use CSS background
+          scale: 2 // Higher quality
+        });
+
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          try {
+            const item = new ClipboardItem({ 'image/png': blob });
+            await navigator.clipboard.write([item]);
+            setIsCopied(true);
+            setTimeout(() => setIsCopied(false), 2000);
+          } catch (writeErr) {
+            console.error('Clipboard write failed', writeErr);
+            alert('Could not copy image automatically. You can right-click the result and copy it!');
+          }
+        });
       } catch (err) {
-        console.error('Failed to copy:', err);
+        console.error('Failed to capture:', err);
       }
     };
 
     return (
       <div className="flex flex-col items-center justify-center p-6 space-y-8 max-w-2xl mx-auto mt-10">
-        <div className="glass p-12 rounded-[2.5rem] w-full text-center space-y-10 relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500" />
+        <div id="result-card" className="glass p-12 rounded-[2.5rem] w-full text-center space-y-10 relative overflow-hidden shadow-2xl">
+          <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${isPassed ? 'from-emerald-500 via-green-500 to-emerald-500' : 'from-red-500 via-orange-500 to-red-500'}`} />
 
-          <div className="space-y-2">
-            <h2 className="text-5xl font-black italic uppercase tracking-tighter text-white">Victory!</h2>
-            <p className="text-slate-400 font-medium">Another step towards mastery</p>
+          <div className="space-y-4">
+            <h2 className={`text-5xl font-black italic uppercase tracking-tighter ${isPassed ? 'text-white' : 'text-red-200'}`}>
+              {isPassed ? 'СДАЛ!' : 'НЕ СДАЛ'}
+            </h2>
+            <p className="text-slate-400 font-medium text-lg px-4">
+              {isPassed
+                ? 'Отличная работа! Вы разбираетесь в политике.'
+                : randomJoke}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -3561,7 +3602,7 @@ const App = () => {
             </div>
           )}
 
-          <div className="space-y-4 pt-4">
+          <div className="space-y-4 pt-4" data-html2canvas-ignore>
             <button
               onClick={handleShare}
               className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all hover:scale-[1.01] active:scale-95 shadow-xl flex items-center justify-center gap-2"
@@ -3569,12 +3610,12 @@ const App = () => {
               {isCopied ? (
                 <>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
-                  Copied to Clipboard!
+                  Copied Image to Clipboard!
                 </>
               ) : (
                 <>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
-                  Share Result with Friends
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                  Share Result Image
                 </>
               )}
             </button>
