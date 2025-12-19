@@ -3108,6 +3108,7 @@ const App = () => {
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [newAchievementsThisRound, setNewAchievementsThisRound] = useState<Achievement[]>([]);
   const [isCopied, setIsCopied] = useState(false);
+  const [currentJoke, setCurrentJoke] = useState('');
 
   // Computed Values
   const currentLevel = Math.floor(totalXP / 1000) + 1;
@@ -3233,6 +3234,9 @@ const App = () => {
       setUnlockedAchievements(prev => [...prev, ...newlyUnlocked.map(a => a.id)]);
       setNewAchievementsThisRound(newlyUnlocked);
     }
+
+    const randomJoke = ENCOURAGEMENT_JOKES[Math.floor(Math.random() * ENCOURAGEMENT_JOKES.length)];
+    setCurrentJoke(randomJoke);
 
     setView('results');
   };
@@ -3520,11 +3524,7 @@ const App = () => {
 
     const isPassed = score >= 15;
 
-    // Choose a random joke only once per render/round effectively
-    const randomJoke = useMemo(() => {
-      const idx = Math.floor(Math.random() * ENCOURAGEMENT_JOKES.length);
-      return ENCOURAGEMENT_JOKES[idx];
-    }, []);
+
 
     const handleShare = async () => {
       const element = document.getElementById('result-card');
@@ -3565,7 +3565,7 @@ const App = () => {
             <p className="text-slate-400 font-medium text-lg px-4">
               {isPassed
                 ? 'Отличная работа! Вы разбираетесь в политике.'
-                : randomJoke}
+                : currentJoke}
             </p>
           </div>
 
