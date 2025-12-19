@@ -3095,6 +3095,7 @@ const App = () => {
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [newAchievementsThisRound, setNewAchievementsThisRound] = useState<Achievement[]>([]);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Computed Values
   const currentLevel = Math.floor(totalXP / 1000) + 1;
@@ -3505,6 +3506,18 @@ const App = () => {
     const accuracy = Math.round((score / currentQuestions.length) * 100);
     const xpGained = (score * XP_PER_CORRECT) + Math.floor(bonusScore / 10);
 
+    const handleShare = async () => {
+      const text = `🏆 ProQuiz Result\n\n🎯 Score: ${score}/${currentQuestions.length}\n⚡ Accuracy: ${accuracy}%\n⭐ Level: ${currentLevel}\n🏅 Achievements: ${unlockedAchievements.length}\n\nCan you beat my score? Play now: ${window.location.href}`;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    };
+
     return (
       <div className="flex flex-col items-center justify-center p-6 space-y-8 max-w-2xl mx-auto mt-10">
         <div className="glass p-12 rounded-[2.5rem] w-full text-center space-y-10 relative overflow-hidden shadow-2xl">
@@ -3550,17 +3563,35 @@ const App = () => {
 
           <div className="space-y-4 pt-4">
             <button
-              onClick={() => setView('home')}
-              className="w-full py-5 bg-white text-indigo-900 font-black rounded-2xl hover:bg-slate-100 transition-all hover:scale-[1.01] active:scale-95 shadow-xl"
+              onClick={handleShare}
+              className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-500 transition-all hover:scale-[1.01] active:scale-95 shadow-xl flex items-center justify-center gap-2"
             >
-              Back to Dashboard
+              {isCopied ? (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                  Copied to Clipboard!
+                </>
+              ) : (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" /><polyline points="16 6 12 2 8 6" /><line x1="12" y1="2" x2="12" y2="15" /></svg>
+                  Share Result with Friends
+                </>
+              )}
             </button>
-            <button
-              onClick={() => startQuiz('normal')}
-              className="w-full py-5 glass text-white font-black rounded-2xl hover:bg-white/10 transition-all active:scale-95"
-            >
-              Try Another Set
-            </button>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setView('home')}
+                className="flex-1 py-4 bg-white/5 text-slate-300 font-bold rounded-2xl hover:bg-white/10 transition-all border border-white/5"
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => startQuiz('normal')}
+                className="flex-1 py-4 bg-white text-indigo-900 font-black rounded-2xl hover:bg-slate-100 transition-all"
+              >
+                Play Again
+              </button>
+            </div>
           </div>
         </div>
       </div>
