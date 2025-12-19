@@ -3527,13 +3527,14 @@ const App = () => {
 
 
     const handleShare = async () => {
+
       const element = document.getElementById('result-card');
       if (!element) return;
 
       try {
         const canvas = await html2canvas(element, {
-          backgroundColor: null, // Transparent or use CSS background
-          scale: 2 // Higher quality
+          backgroundColor: '#0f172a', // Force dark background (Slate 900)
+          scale: 2
         });
 
         canvas.toBlob(async (blob) => {
@@ -3555,7 +3556,7 @@ const App = () => {
 
     return (
       <div className="flex flex-col items-center justify-center p-6 space-y-8 max-w-2xl mx-auto mt-10">
-        <div id="result-card" className="glass p-12 rounded-[2.5rem] w-full text-center space-y-10 relative overflow-hidden shadow-2xl">
+        <div id="result-card" className="bg-slate-900 p-12 rounded-[2.5rem] w-full text-center space-y-10 relative overflow-hidden shadow-2xl border border-slate-800">
           <div className={`absolute top-0 left-0 w-full h-2 bg-gradient-to-r ${isPassed ? 'from-emerald-500 via-green-500 to-emerald-500' : 'from-red-500 via-orange-500 to-red-500'}`} />
 
           <div className="space-y-4">
