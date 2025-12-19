@@ -3527,7 +3527,6 @@ const App = () => {
 
 
     const handleShare = async () => {
-
       const element = document.getElementById('result-card');
       if (!element) return;
 
@@ -3539,6 +3538,24 @@ const App = () => {
 
         canvas.toBlob(async (blob) => {
           if (!blob) return;
+
+          const file = new File([blob], 'quiz-result.png', { type: 'image/png' });
+
+          // Try native sharing first (for mobile)
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({
+                title: 'My Quiz Result',
+                text: 'Check out my score on ProQuiz Master!',
+                files: [file]
+              });
+              return;
+            } catch (shareErr) {
+              console.log('Share canceled or failed, falling back to clipboard', shareErr);
+            }
+          }
+
+          // Fallback to clipboard
           try {
             const item = new ClipboardItem({ 'image/png': blob });
             await navigator.clipboard.write([item]);
@@ -3546,7 +3563,7 @@ const App = () => {
             setTimeout(() => setIsCopied(false), 2000);
           } catch (writeErr) {
             console.error('Clipboard write failed', writeErr);
-            alert('Could not copy image automatically. You can right-click the result and copy it!');
+            alert('Share not supported. Please take a screenshot manually!');
           }
         });
       } catch (err) {
